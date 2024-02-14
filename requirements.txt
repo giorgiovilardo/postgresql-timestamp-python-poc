@@ -1,0 +1,7 @@
+sqlalchemy[asyncio]
+asyncpg
+ipython
+fastapi
+blacksheep
+pydantic
+uvicorn
