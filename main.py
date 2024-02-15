@@ -17,6 +17,28 @@ class Model(DeclarativeBase):
     pass
 
 
+class TimestampedModel(DeclarativeBase):
+    type_annotation_map = {datetime: TIMESTAMP(timezone=True)}
+
+
+class AutotzTimer(TimestampedModel):
+    """
+    Generated sql:
+
+    CREATE TABLE autotz_timer (
+      id UUID NOT NULL,
+      should_have_tz TIMESTAMP WITH TIME ZONE NOT NULL,
+      overridden TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+      PRIMARY KEY (id)
+    )
+    """
+
+    __tablename__ = "autotz_timer"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    should_have_tz: Mapped[datetime]
+    overridden: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=False))
+
+
 class TimerDTO(pydantic.BaseModel):
     tz: datetime
     no_tz: datetime
@@ -53,7 +75,9 @@ AsyncSessionLocal = async_sessionmaker(
 async def initialize_database():
     async with engine.begin() as conn:
         await conn.run_sync(Model.metadata.drop_all)
+        await conn.run_sync(TimestampedModel.metadata.drop_all)
         await conn.run_sync(Model.metadata.create_all)
+        await conn.run_sync(TimestampedModel.metadata.create_all)
 
 
 async def main():
